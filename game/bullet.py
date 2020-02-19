@@ -28,7 +28,7 @@ class Bullet(pygame.sprite.Sprite):
         self.shoot_sound.set_volume(0.3)
         self.shoot_sound.play()
 
-    def update(self, *args):
+    def update(self, war):
         """ 更新子弹位置 """
         self.rect.top -= self.speed
         # 超出屏幕范围
@@ -37,3 +37,13 @@ class Bullet(pygame.sprite.Sprite):
             print(self.plane.bullets)
         # 绘制子弹
         self.screen.blit(self.image, self.rect)
+        #         碰撞检测，检测子弹是否已经碰撞到了敌机
+        # 返回的是飞机的对象
+        rest = pygame.sprite.spritecollide(self, war.enemies, False)
+        print(rest, 666)
+        for r in rest:
+            # 1.子弹消失
+            self.kill()
+            # 2.飞机爆炸 坠毁效果  r是飞机的对象
+            r.broken_down()
+            # 3.统计游戏成绩

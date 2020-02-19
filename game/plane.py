@@ -1,6 +1,8 @@
 """
 飞机的抽象
 """
+import random
+
 import pygame
 
 import constants
@@ -57,8 +59,8 @@ class Plane(pygame.sprite.Sprite):
             self._destroy_img_list.append(pygame.image.load(img))
 
         # 加载坠毁音乐
-        if self.down_sound_src:
-            self.down_sound = pygame.mixer.music.load(self.down_sound_src)
+        # if self.down_sound_src:
+        #     self.down_sound = pygame.mixer.Sound(self.down_sound_src)
 
     @property
     def image(self):
@@ -87,8 +89,11 @@ class Plane(pygame.sprite.Sprite):
     def broken_down(self):
         """飞机坠毁效果"""
         # 1.播放坠毁音乐
-        if self.down_sound:
+        if self.down_sound_src:
+            self.down_sound = pygame.mixer.Sound(self.down_sound_src)
+            self.down_sound.set_volume(0.5)
             self.down_sound.play()
+
         # 2.播放坠毁动画
         for img in self._destroy_img_list:
             self.screen.blit(img, self.rect)
@@ -110,12 +115,24 @@ class OurPlane(Plane):
     # 坠毁的音乐地址
     down_sound_src = None
 
-    def update(self, frame):
+    def update(self, war):
         """更新飞机的动画效果"""
-        if frame % 5:
+        # 1.切换飞机的动画效果，喷气式效果
+        if war.frame % 5:
             self.screen.blit(self.img_list[0], self.rect)
         else:
             self.screen.blit(self.img_list[1], self.rect)
+        #     飞机撞击检测
+        rest = pygame.sprite.spritecollide(self, war.enemies, False)
+        if rest:
+            #1.游戏结束
+            war.status = war.OVER
+            # 2.敌方飞机清除
+            war.enemies.empty()
+            war.small_enemies.empty()
+            # 3我方飞机坠毁效果
+            self.broken_down()
+            # 4.记录游戏成绩
 
     def move_up(self):
         """向上移动超出范围后重置，重写方法"""
@@ -137,3 +154,47 @@ class OurPlane(Plane):
         super().move_right()
         if self.rect.left >= self.width - self.plane_w:
             self.rect.left = self.width - self.plane_w
+
+
+class SmallEnemyPlane(Plane):
+    """敌方的小型飞机"""
+    # list 保存飞机图片
+    plane_images = [constants.SMALL_ENEMY_PLANE_IMG]
+    # 飞机爆炸的图片
+    destroy_images = constants.SMALL_ENEMY_DESTROY_LIST
+    # 坠毁的音乐地址
+    down_sound_src = constants.SMALL_ENEMY_PLANE_DOWN_SOUND
+
+    def __init__(self, screen, speed):
+        super().__init__(screen, speed)
+        # 每次生成新飞机，随机位置出现
+        # 屏幕的宽度-飞机宽度
+        self.init_pos()
+
+    def init_pos(self):
+        """飞机随机位置"""
+        self.rect.left = random.randint(0, self.width - self.plane_w)
+        # 屏幕之外的随机高度（5架飞机的高度）
+        self.rect.top = random.randint(-5 * self.plane_h, -self.plane_h)
+
+    def update(self, *args):
+        """更新飞机移动"""
+        super().move_down()
+
+        # 画在屏幕上
+        self.blit_me()
+
+        if self.rect.top >= self.height:
+            self.active = False
+            # self.kill()
+            self.reset()
+
+    def reset(self):
+        """重置飞机状态"""
+        self.active = True
+        self.init_pos()
+
+    def broken_down(self):
+        """重新飞机爆炸效果"""
+        super().broken_down()
+        self.reset()
