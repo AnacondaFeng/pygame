@@ -3,6 +3,7 @@ import sys
 
 import constants
 from game.plane import OurPlane, SmallEnemyPlane
+from store.result import PlayRest
 
 
 class PlaneWar(object):
@@ -22,6 +23,9 @@ class PlaneWar(object):
     # 敌方小飞机精灵组，可以属于多个精灵组，便于碰撞检测
     small_enemies = pygame.sprite.Group()
     enemies = pygame.sprite.Group()
+    # 游戏结果
+    rest = PlayRest()
+
 
     def __init__(self):
         # 初始化游戏
@@ -56,6 +60,9 @@ class PlaneWar(object):
         self.btn_start_rect.topleft = (int((self.width - self.btn_width) / 2),
                                        int(self.height / 2 + self.btn_height))
 
+        # 游戏文字对象
+        self.score_font = pygame.font.SysFont('arial', 32)
+
         # 加载背景音乐
         pygame.mixer.music.load(constants.BG_MUSIC)
         # 无限循环播放
@@ -63,8 +70,11 @@ class PlaneWar(object):
         # 设置音量
         pygame.mixer.music.set_volume(0.3)
 
+        # 上次按的键盘
+        self.key_down = None
+
         # 实例化飞机对象
-        self.our_plane = OurPlane(self.screen, speed=20)
+        self.our_plane = OurPlane(self.screen, speed=8)
 
         self.clock = pygame.time.Clock()
 
@@ -80,9 +90,13 @@ class PlaneWar(object):
                 # 游戏正在准备中才能进入游戏
                 if self.status == self.READY:
                     self.status = self.PLAYING
+                elif self.status == self.OVER:
+                    self.status = self.READY
+                    self.add_small_enemies(6)
             elif event.type == pygame.KEYDOWN:
                 #         键盘事件
                 # 游戏正在游戏中，才需要控制键盘 ASWD
+                self.key_down = event.key
                 if self.status == self.PLAYING:
                     if event.key == pygame.K_w or event.key == pygame.K_UP:
                         self.our_plane.move_up()
@@ -99,7 +113,7 @@ class PlaneWar(object):
     def add_small_enemies(self, num):
         # 随机添加num架小飞机
         for i in range(num):
-            plane = SmallEnemyPlane(self.screen, 8)
+            plane = SmallEnemyPlane(self.screen, 4)
             plane.add(self.small_enemies, self.enemies)
 
     def run_game(self):
@@ -121,6 +135,8 @@ class PlaneWar(object):
                 self.screen.blit(self.img_game_title, self.img_game_title_rect)
                 # 开始按钮
                 self.screen.blit(self.btn_start, self.btn_start_rect)
+                # 重置按键
+                self.key_down = None
 
             elif self.status == self.PLAYING:
                 #     游戏进行中
@@ -131,11 +147,31 @@ class PlaneWar(object):
                 self.our_plane.bullets.update(self)
                 #     绘制敌方飞机
                 self.small_enemies.update()
+                #     游戏分数
+                score_text = self.score_font.render('Score:{0}'.format(self.rest.score), False,
+                                                    constants.TEXT_SCORE_COLOR)
+                self.screen.blit(score_text, score_text.get_rect())
 
             elif self.status == self.OVER:
                 #     游戏背景
                 self.screen.blit(self.bg_over, self.bg_over.get_rect())
                 # 分数统计
-
+                # 1.本次总分
+                score_text = self.score_font.render('{0}'.format(self.rest.score), False, constants.TEXT_SCORE_COLOR)
+                score_text_rect = score_text.get_rect()
+                text_w, text_h = score_text.get_size()
+                # 改变文字的位置
+                score_text_rect.topleft = (
+                    int((self.width - text_h) / 2),
+                    int(self.height / 2)
+                )
+                self.screen.blit(score_text, score_text_rect)
+                # 2.历史最高分
+                score_hist = self.score_font.render(
+                    '{0}'.format(self.rest.get_max_core()), False,
+                                 constants.TEXT_SCORE_COLOR
+                )
+                self.screen.blit(score_hist, (150, 40))
                 # 刷新屏幕
+
             pygame.display.flip()

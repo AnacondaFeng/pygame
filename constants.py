@@ -1,6 +1,8 @@
 import os
 
 # 项目根目录
+import pygame
+
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 # 静态文件目录
@@ -37,3 +39,12 @@ SMALL_ENEMY_DESTROY_LIST = [os.path.join(ASSETS_DIR, 'images/enemy1_down1.png'),
                             os.path.join(ASSETS_DIR, 'images/enemy1_down4.png')]
 # 敌方小型飞机坠毁声音
 SMALL_ENEMY_PLANE_DOWN_SOUND = os.path.join(ASSETS_DIR, 'sounds/enemy1_down.wav')
+
+# 游戏分数文字颜色
+TEXT_SCORE_COLOR = pygame.Color(255, 255, 0)
+
+# 小型机击中得分
+SCORE_SHOOT_SMALL = 10
+
+# 游戏结果存储文件地址
+PLAY_RESULT_STORE_FILE = os.path.join(BASE_DIR, 'store/rest.txt')

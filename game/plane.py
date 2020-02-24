@@ -35,7 +35,7 @@ class Plane(pygame.sprite.Sprite):
         self.down_sound = None
         self.load_src()
         # 设置飞机速度
-        self.speed = speed or 10  # 默认给10
+        self.speed = speed or 5  # 默认给10
         #     获取飞机位置
         self.rect = self.img_list[0].get_rect()
 
@@ -117,6 +117,7 @@ class OurPlane(Plane):
 
     def update(self, war):
         """更新飞机的动画效果"""
+        self.move(war.key_down)
         # 1.切换飞机的动画效果，喷气式效果
         if war.frame % 5:
             self.screen.blit(self.img_list[0], self.rect)
@@ -125,7 +126,7 @@ class OurPlane(Plane):
         #     飞机撞击检测
         rest = pygame.sprite.spritecollide(self, war.enemies, False)
         if rest:
-            #1.游戏结束
+            # 1.游戏结束
             war.status = war.OVER
             # 2.敌方飞机清除
             war.enemies.empty()
@@ -133,6 +134,17 @@ class OurPlane(Plane):
             # 3我方飞机坠毁效果
             self.broken_down()
             # 4.记录游戏成绩
+
+    def move(self, key):
+        """飞机移动自动控制"""
+        if key == pygame.K_w or key == pygame.K_UP:
+            self.move_up()
+        elif key == pygame.K_s or key == pygame.K_DOWN:
+            self.move_down()
+        elif key == pygame.K_a or key == pygame.K_LEFT:
+            self.move_left()
+        elif key == pygame.K_d or key == pygame.K_RIGHT:
+            self.move_right()
 
     def move_up(self):
         """向上移动超出范围后重置，重写方法"""

@@ -47,3 +47,6 @@ class Bullet(pygame.sprite.Sprite):
             # 2.飞机爆炸 坠毁效果  r是飞机的对象
             r.broken_down()
             # 3.统计游戏成绩
+            war.rest.score += constants.SCORE_SHOOT_SMALL
+            # 保存历史记录
+            war.rest.set_history()
